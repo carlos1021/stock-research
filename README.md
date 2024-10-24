@@ -1,3 +1,5 @@
+# Link to Firebase Website: https://financeapi-1acae.firebaseapp.com/
+
 # Project Specification: Impact of Recession Indicators on S&P 500 Stock Performance with Social Media Sentiment Analysis
 
 ## 1. Project Overview
