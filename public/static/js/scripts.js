@@ -39,3 +39,11 @@ fetch(url)
     .catch(error => console.error('Error:', error)); // Handle any errors
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    const graphImg = document.getElementById("graph");
+    // Flask server URL hosting the plot
+    const flaskServerURL = "http://127.0.0.1:5000/plot";
+
+    // Set the image source to Flask endpoint
+    graphImg.src = flaskServerURL;
+});

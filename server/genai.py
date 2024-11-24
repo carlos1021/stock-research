@@ -1,12 +1,12 @@
 from flask import Flask, render_template, jsonify, Response
-import matplotlib.pyplot as plt
 from flask_cors import CORS
 from openai import OpenAI
+from dotenv import load_dotenv
 import random
 import os
-import io
 
-OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
+load_dotenv()
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 MODEL='gpt-4o-mini'
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -35,20 +35,63 @@ Things we can create:
 """GENERATING GRAPH USING FLASK BACKEND"""
 
 app = Flask(__name__)
+CORS(app, origins=['http://localhost:8000'])
 
-@app.route('/')
-def home():
-    return render_template('index.html')  # HTML file with <img src="/plot">
+@app.route('/make_decision', methods=['GET', 'POST'])
+def conversation():
+	completion = client.chat.completions.create(
+		model=MODEL,
+		messages=[
+			{"role": "system", "content": """
+                 You are an intelligent assistant tasked with making a decision. You will base your decision 
+                on input data that a user sends. The following decisions are as follows:
+                A: the user would like textual information about news sentiment; information 
+                about a company, industry, or general discipline in finance or economics; general 
+                information that can be found through stock news or financial journalist websites.
+                B: the user would like a graph visualization generated using the matplotlib.pyplot 
+                library. The visualization will be dependent on user query and data received.
+                C: the user would like to seek insight from either user input data or data collected 
+                from external sources, such as AlphaVantage and/or Yahoo Finance. 
+                Your response will be either A,B, or C, depending on which task the user would 
+                like accomplished. Here is the following task received from the user: {INSERT_USER_PROMPT_HERE}.
+                Return only the label as your response–nothing else.
+                      
+            """},
+			{"role": "user", "content": None}
+		]
+	)
+	return jsonify({'GPT Response': completion.choices[0].message.content})
+
+
 
 @app.route('/plot')
 def plot():
     import matplotlib.pyplot as plt
+    import pandas as pd
     import io
 
-    # Generate the plot
-    plt.figure(figsize=(6, 4))
-    plt.plot([1, 2, 3], [4, 5, 6])
-    plt.title("Sample Plot")
+    # Code to generate a graph visualization
+    df = pd.read_csv('../data/stock_data.csv')
+    df['Date'] = pd.to_datetime(df['Date'])
+
+    # Plotting
+    plt.figure(figsize=(12, 6))
+
+    # Assuming there are five unique companies in the dataset
+    unique_companies = df['Company'].unique()
+
+    # Iterate through each company and plot its opening prices
+    for company in unique_companies:
+        company_data = df[df['Company'] == company]
+        plt.plot(company_data['Date'], company_data['Open'], label=company)
+
+    # Customize the plot
+    plt.title("Opening Prices of Companies Over Time")
+    plt.xlabel("Date")
+    plt.ylabel("Opening Price")
+    plt.legend(title="Company")
+    plt.grid(True)
+    plt.tight_layout()
 
     # Save to a BytesIO object
     with io.BytesIO() as img:
