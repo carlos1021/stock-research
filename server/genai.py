@@ -1,14 +1,14 @@
-from flask import Flask, render_template, jsonify, Response
+from flask import Flask, render_template, jsonify, Response, request
 from flask_cors import CORS
 from openai import OpenAI
 from dotenv import load_dotenv
 import random
 import os
 
-load_dotenv()
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-MODEL='gpt-4o-mini'
-client = OpenAI(api_key=OPENAI_API_KEY)
+# load_dotenv()
+# OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+# MODEL='gpt-4o-mini'
+# client = OpenAI(api_key=OPENAI_API_KEY)
 
 '''
 OpenAI Cookbook: Building a Bring Your Own Browser for real-time information
@@ -37,41 +37,77 @@ Things we can create:
 app = Flask(__name__)
 CORS(app, origins=['http://localhost:8000'])
 
-@app.route('/make_decision', methods=['GET', 'POST'])
+
+
+@app.route('/make_decision', methods=['POST'])
 def conversation():
-	completion = client.chat.completions.create(
-		model=MODEL,
-		messages=[
-			{"role": "system", "content": """
-                 You are an intelligent assistant tasked with making a decision. You will base your decision 
-                on input data that a user sends. The following decisions are as follows:
-                A: the user would like textual information about news sentiment; information 
-                about a company, industry, or general discipline in finance or economics; general 
-                information that can be found through stock news or financial journalist websites.
-                B: the user would like a graph visualization generated using the matplotlib.pyplot 
-                library. The visualization will be dependent on user query and data received.
-                C: the user would like to seek insight from either user input data or data collected 
-                from external sources, such as AlphaVantage and/or Yahoo Finance. 
-                Your response will be either A,B, or C, depending on which task the user would 
-                like accomplished. Here is the following task received from the user: {INSERT_USER_PROMPT_HERE}.
-                Return only the label as your response–nothing else.
-                      
-            """},
-			{"role": "user", "content": None}
-		]
-	)
-	return jsonify({'GPT Response': completion.choices[0].message.content})
+    try:
+        load_dotenv()
+        OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+        MODEL='gpt-4o-mini'
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        # Log request headers and raw body
+        print(f"Headers: {request.headers}")
+        print(f"Raw Data: {request.data}")
+
+        # Ensure the request is JSON
+        if not request.is_json:
+            print("Request is not JSON")
+            return jsonify({'error': 'Request must be JSON'}), 400
+
+        # Parse JSON and log the parsed data
+        user_query = request.json.get('user_query', '')
+        print(f"Parsed JSON: {request.json}")
+        print(f"Extracted user_query: {user_query}")
+
+        if not user_query:
+            return jsonify({'error': 'user_query field is missing or empty'}), 400
+
+        # Simulate GPT response for debugging
+        response = f"response variable: {user_query}"
+        
+        completion = client.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {"role": "system", "content": f"""
+                        You are an intelligent assistant tasked with making a decision. You will base your decision 
+                        on input data that a user sends. The following decisions are as follows:
+                        A: the user would like textual information about news sentiment; information 
+                        about a company, industry, or general discipline in finance or economics; general 
+                        information that can be found through stock news or financial journalist websites.
+                        B: the user would like a graph visualization generated using the matplotlib.pyplot 
+                        library. The visualization will be dependent on user query and data received.
+                        C: the user would like to seek insight from either user input data or data collected 
+                        from external sources, such as AlphaVantage and/or Yahoo Finance. 
+                        Your response will be either A,B, or C, depending on which task the user would 
+                        like accomplished. Return only the label as your response–nothing else.         
+                    """},
+                    {"role": "user", "content": f"Here is the following task received from the user: {user_query}"}
+                ]
+            )
+
+            # Extract and return GPT response
+        response = completion.choices[0].message.content
+        return jsonify({'GPT Response': response})
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
 
 
 
 @app.route('/plot')
 def plot():
+    import matplotlib
+    matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import pandas as pd
     import io
 
     # Code to generate a graph visualization
-    df = pd.read_csv('../data/stock_data.csv')
+    df = pd.read_csv('stock_data.csv')
     df['Date'] = pd.to_datetime(df['Date'])
 
     # Plotting

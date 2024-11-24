@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <base href="/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Project Template</title>
-    <link rel="stylesheet" href="../static/css/styles.css">
+    <link rel="stylesheet" href="static/css/styles.css">
 </head>
 <body>
     <header>
         <h1>Research Project Title</h1>
     </header>
 
-    <a href="index.html">
+    <a href="templates/index.html">
         <button>Home Page</button>
     </a>
 
@@ -20,11 +21,11 @@
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
     </section>
 
-    <button type="button" id='randomButton'>Generate number from 1-100.</button>
-	<p id='generatedOutput'></p>
 <!-- Generative AI Program -->
-	<button type="button" id='openaiButton'>Generate ChatGPT Response</button>
-	<p id='openaiOutput'></p>
+    <h1>Decision Generator</h1>
+    <input type="text" id="userQuery" placeholder="Enter your query here">
+    <button type="button" id="openaiButton">Generate ChatGPT Response</button>
+    <p id="openaiOutput"></p>
 
     <h1>Python-Generated Graph</h1>
     <img id="graph" src="" alt="Plot">
@@ -33,6 +34,6 @@
         <p>&copy; 2024 Research Project. All rights reserved.</p>
     </footer> -->
 
-    <script src="../static/js/scripts.js"></script>
+    <script src="static/js/scripts.js"></script>
 </body>
 </html>

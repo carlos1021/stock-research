@@ -12,32 +12,39 @@ document.querySelectorAll('nav a').forEach(anchor => {
 });
 
 
-document.getElementById("randomButton").onclick = function() { generateNumber() };
+document.getElementById('openaiButton').addEventListener('click', async () => {
+    const query = document.getElementById('userQuery').value; // Get user input
+    const outputElement = document.getElementById('openaiOutput');
 
-function generateNumber() {
-const url = 'http://127.0.0.1:5000/compute';
-fetch(url)
-    .then(response => response.json()) // Convert the response to JSON
-    .then(data => {
-        // Display the generated number
-        document.getElementById("generatedOutput").innerHTML = JSON.stringify(data.generatedNumber);
-    })
-    .catch(error => console.error('Error:', error)); // Handle any errors
-}
+    console.log('User input query:', query); // Debugging: Log user input
 
+    try {
+        // Send POST request to Flask endpoint
+        const response = await fetch('http://127.0.0.1:5000/make_decision', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ user_query: query })
+        });
 
-document.getElementById("openaiButton").onclick = function() { generateText() };
+        // Log the entire response object
+        console.log('Response object:', response);
 
-function generateText() {
-const url = 'http://127.0.0.1:5000/genai';
-fetch(url)
-    .then(response => response.json()) // Convert the response to JSON
-    .then(data => {
-        // Display the generated number
-        document.getElementById("openaiOutput").innerHTML = JSON.stringify(data['GPT Response']);
-    })
-    .catch(error => console.error('Error:', error)); // Handle any errors
-}
+        if (!response.ok) {
+            console.error('Response error:', response.status, response.statusText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json(); // Parse JSON response
+        console.log('Parsed response data:', data); // Debugging: Log parsed response
+        outputElement.textContent = data['GPT Response'] || data['error']; // Display GPT response or error
+    } catch (error) {
+        console.error('Error in fetch request:', error); // Debugging: Log errors
+        outputElement.textContent = 'An error occurred. Please try again.';
+    }
+});
+
 
 document.addEventListener("DOMContentLoaded", () => {
     const graphImg = document.getElementById("graph");
